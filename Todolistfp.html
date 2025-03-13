@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список задач</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 20px auto;
+            text-align: center;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        .completed {
+            text-decoration: line-through;
+            color: gray;
+        }
+        .button-complete {
+            margin-left: auto;
+            margin-right: 10px;
+        }
+
+        .button-filters {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Список задач</h1>
+    <input type="text" id="taskInput" placeholder="Введите задачу">
+    <button onclick="addTask()">Добавить</button>
+    <div class="button-filters">
+        <button onclick="filterTasks('all')">Все</button>
+        <button onclick="filterTasks('active')">Активные</button>
+        <button onclick="filterTasks('completed')">Выполненные</button>
+    </div>
+    <ul id="taskList"></ul>
+    
+    <script>
+        let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+        let filter = 'all';
+
+        const saveTasks = () => {
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+        };
+
+        const renderTasks = () => {
+            const filteredTasks = tasks.filter(task => {
+                if (filter === 'active') return !task.completed;
+                if (filter === 'completed') return task.completed;
+                return true;
+            });
+            document.getElementById("taskList").innerHTML = filteredTasks.map(taskToHTML).join('');
+        };
+
+        const taskToHTML = (task, index) => `
+            <li>
+                <span class="${task.completed ? 'completed' : ''}">${task.text}</span>
+                <button class="button-complete" onclick="toggleTask(${index})">${task.completed ? 'Отменить' : 'Выполнить'}</button>
+                <button onclick="deleteTask(${index})">Удалить</button>
+            </li>
+        `;
+
+        const addTask = () => {
+            const input = document.getElementById("taskInput");
+            const text = input.value.trim();
+            if (text) {
+                tasks = [...tasks, { text, completed: false }];
+                input.value = "";
+                saveTasks();
+                renderTasks();
+            }
+        };
+
+        const toggleTask = (index) => {
+            tasks = tasks.map((task, i) => i === index ? { ...task, completed: !task.completed } : task);
+            saveTasks();
+            renderTasks();
+        };
+
+        const deleteTask = (index) => {
+            tasks = tasks.filter((_, i) => i !== index);
+            saveTasks();
+            renderTasks();
+        };
+
+        const filterTasks = (newFilter) => {
+            filter = newFilter;
+            renderTasks();
+        };
+
+        renderTasks();
+    </script>
+</body>
+</html>
